@@ -1,0 +1,19 @@
+{
+  "name": "attm2mhack",
+  "version": "0.0.1",
+  "dependencies": {
+    "mongojs": "0.7.x",
+    "express": "3.1.x",
+    "ejs": "0.8.x",
+    "ejs-locals": "~1.0.2",
+    "socket.io": "*"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.3.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://robinjoseph08@bitbucket.org/robinjoseph08/attm2mhack.git"
+  }
+}
