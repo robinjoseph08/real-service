@@ -2,69 +2,82 @@
 /***             REQUIRE             ***/
 /***************************************/
 
-var express = require('express')
-	, engine = require('ejs-locals')
-	, app = express()
+var net = require('net')
+  , mongo = require('mongojs')
+  , db = {
+    cups: [{
+      id: 1,
+      table_id: 4,
+      empty: false,
+      drink: 'Dr. Pepper',
+      assigned: null
+    }]
+  }
+  , express = require('express')
+  , app = express()
   , http = require('http')
-  , server = http.createServer(app)
-  , io = require('socket.io').listen(server)
-  , mongo = require('mongojs');
+  , http_server = http.createServer(app)
+  , io = require('socket.io').listen(http_server)
+  ;
 
 /***************************************/
-/***            CONFIGURE            ***/
+/***           TCP SERVER            ***/
 /***************************************/
 
-io.configure(function () {
-  io.set("transports", ["xhr-polling"]);
-  io.set("polling duration", 10);
-  io.set('log level', 1);
+net_server = net.createServer(function(socket) {
+  socket.on('data',function(data) {
+    var data_str = '' + data;
+    if(data_str.indexOf('{') != -1) {
+      var cup_json = JSON.parse(data_str.substring(data_str.indexOf('{'),data_str.length));
+      console.log(cup_json);
+      if(!db.cups[cup_json.cup_id].empty) {
+        db.cups[cup_json.cup_id].empty = true;
+        // send notification to iOS
+        // socket.emit('refill', {table_id: db.cups[cup_json.cup_id].table_id});
+      }
+    }
+  });
 });
 
-app.configure(function(){
-	// ejs
-  app.set('view engine', 'ejs');
-	// ejs-locals for templating
-	app.engine('ejs', engine);
-  app.set('views', __dirname + '/views');
-  app.use(express.bodyParser());
-  app.use(express.static(__dirname + '/public'));
-  // app.use(express.cookieParser(process.env.SESSION_KEY || 'SECRETKEY'));
-  // app.use(express.session({
-  //   secret: process.env.SESSION_KEY || 'SECRETKEY'
-  // }));
-  app.use(app.router);
-});
-
-// set the port
-var port = process.env.PORT || 3000;
-
 /***************************************/
-/***              ROUTE              ***/
+/***             ROUTES              ***/
 /***************************************/
 
-app.get('/', function (req, res) {
+app.get('/',function(req,res) {
   console.log('GET /');
-  res.render('index', {});
-});
-
-app.get('/test', function (req, res) {
-  console.log('GET /test');
-  res.send('This is a test call.');
+  res.send('YAY HTTP!');
 });
 
 /***************************************/
-/***              LISTEN             ***/
+/***             LISTEN              ***/
 /***************************************/
 
-server.listen(port, function() {
-	console.log('Listening on port ' + port);
+net_server.listen(5000,function() {
+  console.log('TCP now listening on port 5000.');
+});
+
+http_server.listen(3000,function() {
+  console.log('HTTP now listening on port 3000.');
 });
 
 
+/***************************************/
+/***            SOCKET.IO            ***/
+/***************************************/
 
+io.sockets.on('connection', function(socket) {
+  socket.on('assign',function(data) {
+    var assign_json = JSON.parse('' + data);
+    if(db.cups[assign_json.cup_id-1].empty) {
+      db.cups[assign_json.cup_id-1].assigned = assign_json.name;
+    }
+  });
 
-
-
-
-
-
+  socket.on('clear',function(data) {
+    var clear_id = Number(data);
+    if(db.cups[clear_id-1].empty) {
+      db.cups[clear_id-1].empty = false;
+      db.cups[clear_id-1].assigned = null;
+    }
+  });
+});
