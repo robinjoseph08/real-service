@@ -163,25 +163,73 @@ io.sockets.on('connection', function(socket) {
     console.log(cup_id);
     console.log(message_json);
     if(message_json.cup_id) {
-      socket.emit('refill',JSON.parse(message));
+      db.cups.findOne({id:message_json.cup_id},function(err,cup) {
+        if(err) {
+          console.log('db err');
+          console.log(err);
+        } else {
+          console.log(cup);
+          if(!cup.empty) {
+            // update db
+            var payload1 = {
+              "aps": {
+                "badge": 1,
+                "alert": "Refill Table " + cup.table_id + ' with ' + cup.drink '.',
+                "sound": "ding"
+              }
+            };
+            ua.pushNotification("/api/push/broadcast/", payload1, function(error) {
+              console.log('ua broadcast error');
+              console.log(error);
+            });
+            socket.emit('refill',{
+              table_id: cup.table_id,
+              drink: cup.drink
+            });
+          }
+        }
+      });
     } else if(message_json.filled) {
-      socket.emit('filled',JSON.parse(message));
+      db.cups.findOne({id:message_json.filled},function(err,cup) {
+        if(err) {
+          console.log('db err');
+          console.log(err);
+        } else {
+          console.log(cup);
+          if(cup.empty) {
+            // update db
+            socket.emit('filled',{
+              table_id: cup.table_id,
+              drink: cup.drink
+            });
+          }
+        }
+      });
     }
   });
 
   socket.on('token',function(data) {
     console.log('token:');
-    console.log(data);
+    console.log(data.token);
     ua.registerDevice(data.token,function(err){
-      console.log('ua error');
-      console.log(err);
+      if(err) {
+        console.log('ua error');
+        console.log(err);
+      } else {
+        console.log('ua success');
+      }
     });
   });
 
   socket.on('req_queue',function(data) {
     console.log('requested queue');
     db.cups.find(function(err,cups) {
-      socket.emit('queue',{queue: cups});
+      if(err) {
+        console.log('db err');
+        console.log(err);
+      } else {
+        socket.emit('queue',{queue: cups});
+      }
     });
   });
 });
