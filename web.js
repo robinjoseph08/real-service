@@ -162,6 +162,7 @@ io.sockets.on('connection', function(socket) {
     var message_json = JSON.parse(message);
     console.log(cup_id);
     console.log(message_json);
+    console.log(packet.messageId);
     if(message_json.cup_id) {
       db.cups.findOne({id:message_json.cup_id},function(err,cup) {
         if(err) {
@@ -234,13 +235,13 @@ io.sockets.on('connection', function(socket) {
   socket.on('token',function(data) {
     console.log('token');
     console.log(data.token);
-    // ua.unregisterDevice(data.token, function(error) {
-    //   if(error) {
-    //     console.log('ua unregister error');
-    //     console.log(error);
-    //   } else {
-    //     console.log('ua unregister success');
-    //   }
+    ua.unregisterDevice(data.token, function(error) {
+      if(error) {
+        console.log('ua unregister error');
+        console.log(error);
+      } else {
+        console.log('ua unregister success');
+      }
       ua.registerDevice(data.token,function(err){
         if(err) {
           console.log('ua error');
@@ -249,7 +250,7 @@ io.sockets.on('connection', function(socket) {
           console.log('ua success');
         }
       });
-    // });
+    });
   });
 
   socket.on('req_queue',function(data) {
