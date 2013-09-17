@@ -172,10 +172,7 @@ io.sockets.on('connection', function(socket) {
   socket.on('token',function(data) {
     console.log('token:');
     console.log(data);
-    // callbackfn({
-    //   test: 'stuff'
-    // });
-    ua.registerDevice(data,function(err){
+    ua.registerDevice(data.token,function(err){
       console.log('ua error');
       console.log(err);
     });
@@ -183,6 +180,8 @@ io.sockets.on('connection', function(socket) {
 
   socket.on('req_queue',function(data) {
     console.log('requested queue');
-    socket.emit('queue',db.cups.find());
+    db.cups.find(function(err,cups) {
+      socket.emit('queue',{queue: cups});
+    });
   });
 });

@@ -1,5 +1,6 @@
 <script src="/socket.io/socket.io.js"></script>
 <h1>Hey</h1>
+<button onclick="javascript:emit()">click</button>
 <script>
   var socket = io.connect('/');
   socket.on('refill', function (data) {
@@ -10,4 +11,11 @@
     console.log(data);
     //socket.emit('test2', { my: 'data' });
   });
+  socket.on('queue', function (data) {
+    console.log(data);
+  });
+  function emit() {
+    console.log('emit queue');
+    socket.emit('req_queue', {});
+  }
 </script>
