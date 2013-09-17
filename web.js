@@ -145,8 +145,17 @@ mqtt_client.on('message',function(topic,message,packet) {
               console.log(err);
             } else {
               console.log('db update success');
-              io.sockets.emit('filled',{
-                table_id: new_cup.table_id
+              db.cups.find({empty:true},function(err,cups) {
+                if(err) {
+                  console.log('db err');
+                  console.log(err);
+                } else {
+                  console.log('sending queue after filled');
+                  io.sockets.emit('filled',{
+                    table_id: new_cup.table_id
+                  });
+                  io.sockets.emit('queue',{queue: cups});
+                }
               });
             }
           });
