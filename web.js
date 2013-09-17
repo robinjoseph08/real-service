@@ -169,16 +169,16 @@ io.sockets.on('connection', function(socket) {
     }
   });
 
-  socket.on('token',function(data,callbackfn) {
+  socket.on('token',function(data) {
     console.log('token:');
     console.log(data);
-    callbackfn({
-      test: 'stuff'
-    });
-    // ua.registerDevice(data,function(err){
-    //   console.log('ua error');
-    //   console.log(err);
+    // callbackfn({
+    //   test: 'stuff'
     // });
+    ua.registerDevice(data,function(err){
+      console.log('ua error');
+      console.log(err);
+    });
   });
 
   socket.on('req_queue',function(data) {
