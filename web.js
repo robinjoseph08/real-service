@@ -232,7 +232,7 @@ io.sockets.on('connection', function(socket) {
   });
 
   socket.on('token',function(data) {
-    console.log('token:');
+    console.log('token');
     console.log(data.token);
     ua.registerDevice(data.token,function(err){
       if(err) {
@@ -246,7 +246,7 @@ io.sockets.on('connection', function(socket) {
 
   socket.on('req_queue',function(data) {
     console.log('requested queue');
-    db.cups.find(function(err,cups) {
+    db.cups.find({empty:true},function(err,cups) {
       if(err) {
         console.log('db err');
         console.log(err);
@@ -254,5 +254,10 @@ io.sockets.on('connection', function(socket) {
         socket.emit('queue',{queue: cups});
       }
     });
+  });
+
+  socket.on('assign',function(data) {
+    console.log('assign');
+    console.log(data);
   });
 });
