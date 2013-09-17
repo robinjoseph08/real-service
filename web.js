@@ -179,8 +179,12 @@ io.sockets.on('connection', function(socket) {
               }
             };
             ua.pushNotification("/api/push/broadcast/", payload1, function(error) {
-              console.log('ua broadcast error');
-              console.log(error);
+              if(error) {
+                console.log('ua broadcast error');
+                console.log(error);
+              } else {
+                console.log('ua broadcast success');
+              }
             });
             socket.emit('refill',{
               table_id: cup.table_id,
