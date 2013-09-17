@@ -234,13 +234,19 @@ io.sockets.on('connection', function(socket) {
   socket.on('token',function(data) {
     console.log('token');
     console.log(data.token);
-    ua.registerDevice(data.token,function(err){
-      if(err) {
-        console.log('ua error');
-        console.log(err);
-      } else {
-        console.log('ua success');
+    ua.unregisterDevice(data.token, function(error) {
+      if(error) {
+        console.log('ua unregister error');
+        console.log(error);
       }
+      ua.registerDevice(data.token,function(err){
+        if(err) {
+          console.log('ua error');
+          console.log(err);
+        } else {
+          console.log('ua success');
+        }
+      });
     });
   });
 
