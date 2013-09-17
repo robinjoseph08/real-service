@@ -179,6 +179,10 @@ io.sockets.on('connection', function(socket) {
                 console.log(err);
               } else {
                 console.log('db update success');
+                socket.emit('refill',{
+                  table_id: new_cup.table_id,
+                  drink: new_cup.drink
+                });
                 var payload1 = {
                   "aps": {
                     "badge": 1,
@@ -193,10 +197,6 @@ io.sockets.on('connection', function(socket) {
                   } else {
                     console.log('ua broadcast success');
                   }
-                });
-                socket.emit('refill',{
-                  table_id: new_cup.table_id,
-                  drink: new_cup.drink
                 });
               }
             });
