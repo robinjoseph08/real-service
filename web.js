@@ -282,7 +282,7 @@ io.sockets.on('connection', function(socket) {
             console.log(err);
           } else {
             console.log('sending queue after assign');
-            socket.emit('queue',{queue: cups});
+            io.sockets.emit('queue',{queue: cups});
           }
         });
       }
