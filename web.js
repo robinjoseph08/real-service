@@ -213,7 +213,7 @@ io.sockets.on('connection', function(socket) {
           if(cup.empty) {
             db.cups.findAndModify({
               query: { id: cup.id },
-              update: { $set: { empty:false } }
+              update: { $set: { empty:false, assigned: null } }
             }, function(err, new_cup) {
               if(err) {
                 console.log('db update error');
@@ -259,5 +259,25 @@ io.sockets.on('connection', function(socket) {
   socket.on('assign',function(data) {
     console.log('assign');
     console.log(data);
+    db.cups.findAndModify({
+      query: { table_id: data.table_id },
+      update: { $set: { assigned:data.name } }
+    }, function(err, new_cup) {
+      if(err) {
+        console.log('db update error');
+        console.log(err);
+      } else {
+        console.log('db update success');
+        db.cups.find({empty:true},function(err,cups) {
+          if(err) {
+            console.log('db err');
+            console.log(err);
+          } else {
+            console.log('sending queue after assign');
+            socket.emit('queue',{queue: cups});
+          }
+        });
+      }
+    });
   });
 });
