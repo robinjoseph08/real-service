@@ -73,7 +73,7 @@ mqtt_client = mqtt.createClient(1883, 'att-q.m2m.io', {
   protocolVersion: 3,
   username: 'robinjoseph08@sbcglobal.net',
   password: 'c763a1f9b7833418b277d1d01b482438',
-  clientId: 'realservice1'
+  clientId: 'realservice2'
 });
 
 mqtt_client.on('connect',function(data) {
