@@ -238,6 +238,8 @@ io.sockets.on('connection', function(socket) {
       if(error) {
         console.log('ua unregister error');
         console.log(error);
+      } else {
+        console.log('ua unregister success');
       }
       ua.registerDevice(data.token,function(err){
         if(err) {
