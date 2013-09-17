@@ -87,7 +87,7 @@ mqtt_client = mqtt.createClient(1883, 'att-q.m2m.io', {
   protocolVersion: 3,
   username: 'robinjoseph08@sbcglobal.net',
   password: 'c763a1f9b7833418b277d1d01b482438',
-  clientId: 'realservice1'
+  clientId: 'realservice'
 });
 
 mqtt_client.on('connect',function(data) {
@@ -183,13 +183,16 @@ io.sockets.on('connection', function(socket) {
     }
   });
 
-  socket.on('token',function(data) {
+  socket.on('token',function(data,callbackfn) {
     console.log('token:');
     console.log(data);
-    ua.registerDevice(data,function(err){
-      console.log('ua error');
-      console.log(err);
+    callbackfn({
+      test: 'stuff'
     });
+    // ua.registerDevice(data,function(err){
+    //   console.log('ua error');
+    //   console.log(err);
+    // });
   });
 
   socket.on('req_queue',function(data) {
