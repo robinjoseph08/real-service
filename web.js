@@ -165,30 +165,40 @@ io.sockets.on('connection', function(socket) {
     if(message_json.cup_id) {
       db.cups.findOne({id:message_json.cup_id},function(err,cup) {
         if(err) {
-          console.log('db err');
+          console.log('db find err');
           console.log(err);
         } else {
-          console.log(cup);
+          console.log('db find success');
           if(!cup.empty) {
-            // update db
-            var payload1 = {
-              "aps": {
-                "badge": 1,
-                "alert": "Refill Table " + cup.table_id + ' with ' + cup.drink + '.',
-                "sound": "ding"
-              }
-            };
-            ua.pushNotification("/api/push/broadcast/", payload1, function(error) {
-              if(error) {
-                console.log('ua broadcast error');
-                console.log(error);
+            db.cups.findAndModify({
+              query: { id: cup.id },
+              update: { $set: { empty:true } }
+            }, function(err, new_cup) {
+              if(err) {
+                console.log('db update error');
+                console.log(err);
               } else {
-                console.log('ua broadcast success');
+                console.log('db update success');
+                var payload1 = {
+                  "aps": {
+                    "badge": 1,
+                    "alert": "Refill Table " + new_cup.table_id + ' with ' + new_cup.drink + '.',
+                    "sound": "ding"
+                  }
+                };
+                ua.pushNotification("/api/push/broadcast/", payload1, function(error) {
+                  if(error) {
+                    console.log('ua broadcast error');
+                    console.log(error);
+                  } else {
+                    console.log('ua broadcast success');
+                  }
+                });
+                socket.emit('refill',{
+                  table_id: new_cup.table_id,
+                  drink: new_cup.drink
+                });
               }
-            });
-            socket.emit('refill',{
-              table_id: cup.table_id,
-              drink: cup.drink
             });
           }
         }
@@ -196,15 +206,24 @@ io.sockets.on('connection', function(socket) {
     } else if(message_json.filled) {
       db.cups.findOne({id:message_json.filled},function(err,cup) {
         if(err) {
-          console.log('db err');
+          console.log('db find err');
           console.log(err);
         } else {
-          console.log(cup);
+          console.log('db find success');
           if(cup.empty) {
-            // update db
-            socket.emit('filled',{
-              table_id: cup.table_id,
-              drink: cup.drink
+            db.cups.findAndModify({
+              query: { id: cup.id },
+              update: { $set: { empty:false } }
+            }, function(err, new_cup) {
+              if(err) {
+                console.log('db update error');
+                console.log(err);
+              } else {
+                console.log('db update success');
+                socket.emit('filled',{
+                  table_id: new_cup.table_id
+                });
+              }
             });
           }
         }
