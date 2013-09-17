@@ -174,7 +174,7 @@ io.sockets.on('connection', function(socket) {
             var payload1 = {
               "aps": {
                 "badge": 1,
-                "alert": "Refill Table " + cup.table_id + ' with ' + cup.drink '.',
+                "alert": "Refill Table " + cup.table_id + ' with ' + cup.drink + '.',
                 "sound": "ding"
               }
             };
