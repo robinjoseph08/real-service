@@ -115,7 +115,7 @@ mqtt_client.subscribe('b4b862f7ad6aef376c25e792ffaa914b/arduino/#', {qos: 0}, fu
 /***             LISTEN              ***/
 /***************************************/
 
-server.listen(5000,function() {
+server.listen(process.env.PORT || 5000,function() {
   console.log('HTTP now listening on port 5000.');
 });
 
