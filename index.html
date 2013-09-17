@@ -2,7 +2,11 @@
 <h1>Hey</h1>
 <script>
   var socket = io.connect('/');
-  socket.on('test', function (data) {
+  socket.on('refill', function (data) {
+    console.log(data);
+    //socket.emit('test2', { my: 'data' });
+  });
+  socket.on('filled', function (data) {
     console.log(data);
     //socket.emit('test2', { my: 'data' });
   });

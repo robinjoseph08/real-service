@@ -19,22 +19,46 @@ var db = {
   }
   , mqtt = require('mqtt')
   , http = require('http')
+  , mongo = require('mongojs')
   , server = http.createServer(function(req,res) {
     // res.write('test');
     // res.end();
+    console.log(req.url);
+    var url_array = req.url.substr(1,req.url.length).split('/');
+    console.log(url_array);
 
-    fs.readFile('index.html', function(err, html) {
-      if(err) {
-        res.writeHead(500, {"Content-Type": "text/plain"});
-        res.write(err + "\n");
+    // root route
+    if(url_array.length == 1 && url_array == '') {
+      fs.readFile('index.html', function(err, html) {
+        if(err) {
+          res.writeHead(500, {"Content-Type": "text/plain"});
+          res.write(err + "\n");
+          res.end();
+          return;
+        }
+
+        res.writeHead(200, {"Content-Type": "text/html"});
+        res.write(html);
         res.end();
-        return;
-      }
-
-      res.writeHead(200, {"Content-Type": "text/html"});
-      res.write(html);
-      res.end();
-    });
+      });
+    // register the cups into the DB
+    } else if(url_array[0] == 'register_cup') {
+      db.cups.save({
+        id: Number(url_array[1]),
+        table_id: Number(url_array[1]) + 3,
+        empty: false,
+        drink: (Number(url_array[1]) == 1 ? 'Dr. Pepper' : 'Pepsi')
+      }, function(err, saved) {
+        if(err || !saved) {
+          console.log("Cup not saved");
+          console.log(err)
+        }
+        else {
+          console.log("Cup saved");
+          console.log(saved);
+        }
+      });
+    }
   })
   , io = require('socket.io').listen(server)
   , fs = require("fs")
@@ -42,11 +66,18 @@ var db = {
   , ua = new UA("LXiU5zf5T828zvehhEYztw", "LyuvmcX7T-KJWWH7ubtTkA", "1SqY61axQPGpA2-awcJpsw")
   ;
 
+/***************************************/
+/***            CONFIGURE            ***/
+/***************************************/
+
 io.configure(function () {
   io.set("transports", ["xhr-polling"]);
   io.set("polling duration", 10);
   io.set('log level', 1);
 });
+
+// set the port
+var port = process.env.PORT || 3000;
 
 /***************************************/
 /***           MQTT SERVER           ***/
@@ -56,7 +87,7 @@ mqtt_client = mqtt.createClient(1883, 'att-q.m2m.io', {
   protocolVersion: 3,
   username: 'robinjoseph08@sbcglobal.net',
   password: 'c763a1f9b7833418b277d1d01b482438',
-  clientId: 'realservice'
+  clientId: 'realservice1'
 });
 
 mqtt_client.on('connect',function(data) {
@@ -112,11 +143,25 @@ mqtt_client.subscribe('b4b862f7ad6aef376c25e792ffaa914b/arduino/#', {qos: 0}, fu
 // });
 
 /***************************************/
+/***              MONGO              ***/
+/***************************************/
+
+// configure the database URL
+var databaseUrl = process.env.MONGOLAB_URI ||
+  process.env.MONGOHQ_URL ||
+  'attm2mhack';
+
+// establish the mongo tables
+var collections = ['cups'];
+// connect to the mongo DB
+var db = mongo.connect(databaseUrl, collections);
+
+/***************************************/
 /***             LISTEN              ***/
 /***************************************/
 
-server.listen(process.env.PORT || 5000,function() {
-  console.log('HTTP now listening on port 5000.');
+server.listen(port,function() {
+  console.log('HTTP now listening on port ' + port + '.');
 });
 
 /***************************************/
@@ -128,8 +173,27 @@ io.sockets.on('connection', function(socket) {
 
   mqtt_client.on('message',function(topic,message,packet) {
     var cup_id = topic.substr(topic.length-1,1);
+    var message_json = JSON.parse(message);
     console.log(cup_id);
-    console.log(JSON.parse(message));
-    socket.emit('test',JSON.parse(message));
+    console.log(message_json);
+    if(message_json.cup_id) {
+      socket.emit('refill',JSON.parse(message));
+    } else if(message_json.filled) {
+      socket.emit('filled',JSON.parse(message));
+    }
+  });
+
+  socket.on('token',function(data) {
+    console.log('token:');
+    console.log(data);
+    ua.registerDevice(data,function(err){
+      console.log('ua error');
+      console.log(err);
+    });
+  });
+
+  socket.on('req_queue',function(data) {
+    console.log('requested queue');
+    socket.emit('queue',db.cups.find());
   });
 });
